@@ -9,8 +9,8 @@ honeycomb heatmap.
 The wire is physically one-way (the units can't report state back), so
 this is necessarily a **predictive model**, not a mirror of telemetry —
 see `src/sim/unit.js`'s header comment for exactly which firmware
-behaviors it replicates (move merging, the tracked/physical angle
-desync after an interrupted move, homing being blocking and deaf to
+behaviors it replicates (move merging, X vs. C vs. P's different effects
+on the queue and tracked position, homing being blocking and deaf to
 other commands, queue overflow, etc).
 
 ## Quick start (no Pi needed)
@@ -28,7 +28,7 @@ nothing about routing, patterns, or the command tap is reimplemented. It
 sets `HEXAGON_UART=none` so `orchestrator.py` writes to a null backend
 instead of a real serial port (every command is already captured by the
 tap before that write would happen), and redirects flash-filesystem paths
-(`dist/`, `macros.json`, `log.txt`) under `simhost/.fsroot/` so nothing
+(`dist/`, `state.json`, `log.txt`) under `simhost/.fsroot/` so nothing
 touches your real filesystem.
 
 Options:
@@ -57,9 +57,10 @@ npm run dev
   automatically — there's no direct connection between tabs; both are
   just reading the same server-side command tap (`GET /api/sim/tail`, fed
   by `orchestrator.send()`).
-- Click a hexagon to open its **inspector**: current angle, depth,
-  RPM, queue depth, and whether it's desynced (tracked position no
-  longer matches physical position — see the fidelity notes above).
+- Click a hexagon to open its **inspector**: run state, current angle,
+  depth, RPM, queue depth (out of 64), whether it's moving or homing,
+  whether it needs a home before its next move (set by `P`), and a
+  queue-overflow counter.
 - **Overlays** (sidebar) toggle unit ID / depth / angle / queue-depth
   labels drawn on each tile.
 - **Transport bar** (bottom): play/pause, playback rate, and a scrub
@@ -112,6 +113,10 @@ every mode's own background thread never is.
 
 ## Limitations
 
+- `src/sim/bus.js` parses `M`, `A`, `H`, `N`, `X`, `P`, `S`, `W`, `G`, `C`,
+  and `K`. It does not model `R` (batch repeat), `D` (staged coil
+  release), or `I` (reprovisioning). A choreography using those still
+  reaches the real bus fine; the sim just won't render their effect.
 - The tap buffer is capped (see `tap.py`) — an extremely large burst
   sent while nobody has polled recently can trim old entries before the
   browser reads them. The sim detects this (`dropped` in the tail

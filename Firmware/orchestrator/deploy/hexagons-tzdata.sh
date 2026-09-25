@@ -14,8 +14,8 @@
 # sudoers rule to install.
 #
 # Best-effort by design: this Pi frequently has no internet at all (the
-# hexagon-ap fallback is an isolated hotspot — see AGENTS.md's "Network
-# resilience"), so apt-get failing here must never fail the unit or hold up
+# hexagon-ap fallback is an isolated hotspot — see README.md's networking
+# section), so apt-get failing here must never fail the unit or hold up
 # boot. Always exits 0.
 # ---------------------------------------------------------------------------
 

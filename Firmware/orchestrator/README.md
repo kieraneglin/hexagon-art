@@ -1,271 +1,133 @@
-# Hexagon Art Piece — Orchestrator Firmware
+# Orchestrator
 
-Central controller for the hexagon art piece.  
-Runs on a **Raspberry Pi Zero W (v1.1) with Raspberry Pi OS Lite**, serves a
-web UI, and sends UART commands to hexagon units over a one-way bus at
-115200 baud.
-
----
-
-## Hardware Notes
-
-This firmware targets a **Raspberry Pi Zero W v1.1** running Raspberry Pi OS
-Lite. The bus wiring is unchanged from the previous ESP32 controller — 3.3V
-logic, TX-only, 115 200 baud — connected to the Pi's GPIO UART (pin 8 /
-GPIO14, `/dev/serial0`).
-
-> **The Zero W's PL011 UART is wired to Bluetooth by default**, leaving
-> `/dev/serial0` mapped to the mini-UART, whose baud rate is tied to the VPU
-> core clock and unreliable at 115 200. It also runs a login console on that
-> port by default, which would spray boot/login text down the hexagon bus.
-> Both are fixed in one-time OS setup below.
-
----
+The central controller. Runs on a Raspberry Pi Zero W, serves a web UI, and drives the hexagon bus over UART. Deep setup and simulator details live in [`PI_SETUP.md`](PI_SETUP.md) and [`SIMULATOR.md`](SIMULATOR.md); this is the overview.
 
 ## Architecture
 
-**nginx is the only thing reachable from the network, on port 80.** It
-serves `dist/` (the built UI) straight off disk and reverse-proxies
-`/api/*` to the app. The app itself — Flask, running under the Waitress
-WSGI server — binds to `127.0.0.1:8080` only; it's never reachable
-directly, even from another machine on the same LAN.
+nginx is the only thing reachable from the network, on port 80. It serves the built UI (`dist/`) straight off disk and reverse-proxies `/api/*` to the app. The app itself, Flask running under Waitress, binds to `127.0.0.1:8080` only and is never reachable directly, even from another machine on the same LAN.
 
-```
-Browser ──:80──> nginx ──┬── /            → dist/ (static files, off disk)
-                          └── /api/*       → 127.0.0.1:8080 (Flask/Waitress)
-                                                  │
-                                                  └── orchestrator.py ──UART──> hexagon bus
-```
+nginx and the app are installed as two independent systemd-managed pieces (`--install-nginx` and `--install-service`) since they change at different rates: routine deploys only ever touch the app, while nginx's config is effectively static after first setup. Waitress runs a single process with a small thread pool rather than gunicorn's multiple worker processes, deliberately, since more than one process opening the shared UART handle would interleave garbage onto the bus.
 
-Two systemd-managed pieces, installed independently (`--install-service`
-for the app, `--install-nginx` for nginx) since they change at different
-rates: routine deploys only ever touch the app (rsync + restart
-`hexagons`), while nginx's config is effectively static after first setup.
+## The bus connection
 
----
+The UART device is set by `HEXAGON_UART`, defaulting to `/dev/serial0` (the Pi's GPIO14/15 header UART). `HEXAGON_UART=none` runs against a null backend that discards every write instead of opening a port, which is what the simulator uses.
 
-## First-Time Setup
+The deployed `deploy/hexagons.service` currently sets `HEXAGON_UART=/dev/ttyUSB0` instead of the default, because this installation's Pi has its onboard GPIO14/15 electrically damaged; an FTDI FT232R USB-to-serial adapter stands in until the board is replaced. If you're setting this up on a Pi with working GPIO, remove that override (or point it at `/dev/serial0` explicitly) and follow the GPIO UART setup in `PI_SETUP.md` instead.
 
-These steps are only needed once per Pi. After this, all deploys happen over
-SSH.
+Whichever device it is, the settings are fixed: 115200 baud, 8N1, one-way. The orchestrator writes; nothing reads back.
 
-### 1 — Flash and boot Raspberry Pi OS Lite
+## Patterns vs. modes
 
-Use [Raspberry Pi Imager](https://www.raspberrypi.com/software/) to flash
-**Raspberry Pi OS Lite**. In the imager's advanced options, set the hostname
-to `hexagons`, enable SSH (password auth — `--bootstrap` below needs
-`ssh-copy-id` to already have run), and configure at least one WiFi network
-so first boot can reach `apt`.
+Both send commands to the bus, but on different clocks:
 
-```bash
-ssh-copy-id pi@hexagons.local
-```
+- A **pattern** stages one finite burst into every unit's queue and fires it with a single `FFG`, then returns. Good for one-off or short-lived choreography.
+- A **mode** runs on a background thread where the orchestrator itself is the clock: on every tick, it stages whatever should move next and fires it, so the units never drift relative to each other over a long run. Only one mode runs at a time; starting a pattern or hitting Stop kills the running mode.
 
-### 2 — OS bring-up: UART, USB gadget SSH, WiFi/AP fallback, Tailscale
+Patterns: `water_drop`, `cascade`, `sweep`, `sparkle`, `pinwheel`, `bloom`, `rain`. (`home_wave`, the staggered full-installation homing sequence behind the persistent Home button, is registered the same way but deliberately left off the Patterns page, since it's a system operation rather than a choreography choice.)
 
-Create `boot_credentials.json` in this repo's root (gitignored, never
-committed):
+Modes: `wave`, `random`, `life` (a hex-grid cellular automaton), `ripple`, and `auto`, which cycles through wave, ripple, and random on a timer for unattended operation, crossfading and re-homing between segments. `auto`'s timing lives in `server/modes/auto_config.py`.
 
-```json
-{
-  "wifi_networks": [
-    { "ssid": "...", "password": "...", "priority": 100 },
-    { "ssid": "...", "password": "..." }
-  ],
-  "ssh": { "username": "pi", "password": "..." },
-  "ap": { "ssid": "hexagon-ap" }
-}
-```
+Every mode and pattern's speed-dependent parameters (sweep timing, interval, generation length) are validated against whatever motor speed (`GET/POST /api/settings`) is actually configured, not a hardcoded assumption, so a parameter that's safe at one speed can't be replayed unsafely at another.
 
-Then, from this repo:
+## Physical layout
 
-```bash
-./deploy.sh --bootstrap   # one-time: UART, USB gadget, WiFi/AP, tailscaled — see PI_SETUP.md
-```
+`server/patterns/layout.py`'s `RINGS` list is the single source of truth for which unit ID sits where: concentric hexagonal rings, ring 0 the centre, each subsequent ring 6 units wider than the last. The current installation is 5 rings deep (61 units, `0x01`-`0x3D`). Every pattern and the simulator both read this file; nothing else hardcodes a unit count or position.
 
-This hands the PL011 UART back from Bluetooth, disables the serial login
-console, stages USB gadget SSH (fallback: `ssh pi@10.42.0.1` over a USB
-cable, no WiFi needed), creates a NetworkManager profile per network in
-`boot_credentials.json`, sets up an open (no-password — see `PI_SETUP.md`
-§6 for why) `hexagon-ap` access point that comes up automatically if no
-known WiFi network is found at boot, and installs + enables Tailscale
-(not authenticated — run `sudo tailscale up` yourself whenever you're
-ready). It's interactive (prompts for the sudo password once) and
-idempotent — safe to re-run after a failure or a credentials change.
+To adapt this to a different installation: edit `RINGS` to match your own wiring, and set `RING_START`/`RING_WINDING` so the simulator's on-screen ID overlay lines up with the physical wall. Only concentric hex-ring layouts are supported; a partial ring just fills the first positions in walk order.
 
-It ends by telling you a reboot is required (it is, the first time):
+## Frontend
 
-```bash
-ssh pi@hexagons.local 'sudo reboot'
-```
+Preact + Vite (not React). Routes, all client-side via `preact-router`:
 
-**Verify before wiring up the piece** — loop GPIO14 (pin 8) to GPIO15
-(pin 10) with a jumper wire and confirm a clean echo:
+| Route | Page |
+| --- | --- |
+| `/` | Calm visitor page: mode buttons, Home, Stop |
+| `/touch` | Drag across the honeycomb to move the real units |
+| `/settings` | Daily on/off schedule and default motor speed |
+| `/admin` | Raw command terminal, with a macro drawer |
+| `/admin/tools` | Motor speed, a unit-ID sweep/checker, Set Unit ID (bus `I` command), WiFi management |
+| `/admin/patterns` | Pattern cards with parameter inputs |
+| `/admin/modes` | Start/stop modes with parameters |
+| `/admin/sim` | The browser simulator (see `SIMULATOR.md`) |
 
-```bash
-ssh pi@hexagons.local "python3 -c \"import serial; s=serial.Serial('/dev/serial0',115200,timeout=1); s.write(b'FFG\r\n'); print(s.read(5))\""
-# should print: b'FFG\r\n'
-```
+`npm run build` outputs to `dist/`, which is what nginx (or `simhost/`) actually serves.
 
-Garbage output means the Bluetooth overlay didn't take; boot/login text
-means the serial console is still enabled. See `PI_SETUP.md` §2 for the
-full gotcha list (in particular: this check is meaningless before the
-reboot above — config file edits don't affect the running kernel).
+## API
 
-### 3 — Install the app + nginx, and do the first deploy
+All of these sit behind nginx at port 80 in production; hitting `127.0.0.1:8080` directly only works on the Pi itself.
+
+| Method | Path | What it does |
+| --- | --- | --- |
+| GET | `/api/health` | UART and clock status |
+| POST | `/api/send` | Raw commands, one per line, `text/plain` |
+| GET / POST | `/api/macros` | List / save a named macro |
+| DELETE | `/api/macros/<name>` | Delete a macro |
+| GET | `/api/patterns` | List patterns |
+| POST | `/api/patterns/<name>` | Run one |
+| POST | `/api/patterns/stop` | Stop whatever's running |
+| GET | `/api/modes` | List modes |
+| POST | `/api/modes/<name>` | Start one |
+| POST | `/api/modes/stop` | Stop the running mode |
+| GET | `/api/modes/status` | What's currently running |
+| GET | `/api/sim/tail?since=N` | Recent command history, for the simulator |
+| GET | `/api/layout` | Ring/coordinate geometry, for the simulator |
+| GET / POST | `/api/network` | WiFi status / add a network (Pi only; reboots) |
+| DELETE | `/api/network/<ssid>` | Forget a saved network |
+| GET / POST | `/api/settings` | Default motor speed |
+| GET / POST | `/api/schedule` | Daily on/off schedule |
+
+## Persisted state
+
+Everything the orchestrator remembers across a restart, macros, the default speed, the schedule, the last mode a human started, lives in one `state.json` under `HEXAGON_FS_ROOT`, written atomically. There's no database and no per-feature file.
+
+## Running it locally, without a Pi
 
 ```bash
-npm install                     # one-time, for the Vite build
-./deploy.sh --install-service   # one-time: installs + enables hexagons.service
-./deploy.sh --install-nginx     # one-time: installs nginx + Flask/Waitress + the site config
-./deploy.sh                     # builds the UI, syncs files, restarts the service
+npm install && npm run build
+python3 -m venv .venv && .venv/bin/pip install ruff -r requirements.txt
+.venv/bin/python simhost/run.py        # serves on 127.0.0.1:8080, sandboxed HEXAGON_UART=none
+python3 -m simhost.selftest            # queue-safety and command-syntax checks
 ```
 
-`--install-nginx` is interactive (asks for your sudo password once) —
-everything else runs non-interactively over the SSH key. See
-[Architecture](#architecture) below for why nginx is in the picture at all.
+Open `http://127.0.0.1:8080/admin/sim` for the visual simulator, which renders a heatmap of every unit's simulated angle by replaying the same command stream a real bus would see. See `SIMULATOR.md` for how it works and what it doesn't model (it doesn't simulate `R`, `D`, or `I`).
 
-### 4 — Open the UI
+`npm run dev` runs Vite's dev server with hot reload, proxying `/api` to `hexagons.local` by default; point it at `127.0.0.1:8080` in `vite.config.js` if you're developing against `simhost` instead of a real Pi.
 
-```
-http://hexagons.local
-```
-
----
-
-## Subsequent Deploys
+## Deploying to a Pi
 
 ```bash
-# One-shot — builds UI, rsyncs files, restarts the service
-./deploy.sh
-
-# Watch mode — rebuilds and redeploys on every save
-./deploy.sh --watch
-
-# Target a specific IP instead of mDNS
-./deploy.sh --host 192.168.1.42
+./deploy.sh --bootstrap          # one-time OS setup: UART, WiFi/AP fallback, Tailscale (see PI_SETUP.md)
+./deploy.sh --install-service    # one-time: install the systemd unit
+./deploy.sh --install-nginx      # one-time: install nginx + the site config
+./deploy.sh                      # routine: build, rsync, restart, health-check
+./deploy.sh --watch              # rebuild and redeploy on every save
+./deploy.sh --host 192.168.1.42  # target a specific IP instead of mDNS
 ```
 
-Watch mode requires `fswatch` (macOS: `brew install fswatch`) or
-`inotifywait` (Linux: `apt install inotify-tools`).
+`--bootstrap` and `--install-nginx` are interactive (they edit system config and ask for a sudo password once); everything else runs non-interactively over key-based SSH. A routine deploy excludes `state.json`, `log.txt`, `boot_credentials.json`, and a handful of other runtime/dev-only paths from the rsync, so redeploying never wipes saved state, and polls `/api/health` afterward to confirm the restart actually came back up.
 
-The deploy script:
+## Python development
 
-1. Runs `npm run build` (Vite → `dist/`)
-2. `rsync`s the repo to `/opt/hexagons` on the Pi (excluding `macros.json`
-   and `log.txt` — those are runtime state, not source, and would otherwise
-   get wiped by `--delete` on every deploy)
-3. `ssh`es in and runs `sudo systemctl restart hexagons`
-4. Polls `GET http://<host>/api/health` (through nginx, port 80 — the app
-   itself isn't reachable from here) until the server responds (up to 20 s)
+Python is linted and formatted with [ruff](https://docs.astral.sh/ruff/) (config in `pyproject.toml`); JS/JSX with ESLint and Prettier. The Husky pre-commit hook runs both against staged files and expects `.venv` to already exist (`python3 -m venv .venv && .venv/bin/pip install ruff -r requirements.txt`).
 
-nginx itself needs no action on a routine deploy — it reads `dist/`
-straight off disk, so new content is live the moment step 2 finishes. Only
-a change to `deploy/nginx.hexagons.conf` needs `./deploy.sh --install-nginx`
-re-run.
-
----
-
-## Python Development Environment
-
-Firmware Python files are linted and formatted with **[ruff](https://docs.astral.sh/ruff/)**.
-
-### Set up the venv
-
-```bash
-python3 -m venv .venv
-.venv/bin/pip install ruff -r requirements.txt
-```
-
-### Lint & format manually
-
-```bash
-# Check
-.venv/bin/ruff check server/ *.py
-
-# Auto-fix + format
-.venv/bin/ruff check --fix server/ *.py
-.venv/bin/ruff format server/ *.py
-```
-
-Ruff config lives in `pyproject.toml`.
-
-### Pre-commit hook
-
-The Husky pre-commit hook (`.husky/pre-commit`) automatically:
-
-1. Runs **ESLint + Prettier** on staged JS/JSX files.
-2. Runs **ruff format + ruff check --fix** on staged `.py` files and re-stages them.
-
-Requires the `.venv` to exist — run the setup step above once per clone.
-
----
-
-## Project Structure
+## Layout
 
 ```
 orchestrator/
-├── main.py               Entry point: sets HEXAGON_FS_ROOT, starts Flask/Waitress
-├── boot_log.py            File logger (log.txt) with rotation
-├── orchestrator.py        UART command module (pyserial) + the send() lock
-├── server/                Application layer (Flask)
-│   ├── __init__.py        Flask app, route registration, serve() (Waitress)
-│   ├── macros.py          Macro JSON persistence (/macros.json) + its lock
-│   ├── modes/              Mode registry (server/modes/__init__.py) + runner.py + wave.py
-│   └── routes/
-│       ├── send.py        POST /api/send
-│       ├── macros.py      GET/POST/DELETE /api/macros
-│       ├── system.py      GET /api/health
-│       ├── patterns.py    GET /api/patterns, POST /api/patterns/<name>, /stop
-│       ├── modes.py       GET /api/modes, POST /api/modes/<name>, /stop, GET /status
-│       └── sim.py         GET /api/sim/tail, GET /api/layout
-├── tap.py                 In-memory command tap, feeds the simulator
-├── src/                   Vite/Preact web UI source
-│   ├── pages/SimplePage.jsx  Calm root UI (/) — mode buttons, Home, Stop
-│   └── sim/                JS firmware model + polling client for the simulator
-├── simhost/                CPython dev harness — runs server/ off-device (see SIMULATOR.md)
-├── dist/                   Built UI (generated — served by nginx on the Pi)
-├── deploy/
-│   ├── hexagons.service    systemd unit for the app, installed by deploy.sh --install-service
-│   └── nginx.hexagons.conf nginx site config, installed by deploy.sh --install-nginx
-├── deploy.sh               rsync + systemd deploy script
-├── requirements.txt        Python deps (pyserial, flask, waitress) for local dev venvs
-├── package.json            Node dependencies (Vite, Preact, ESLint)
-├── pyproject.toml          Ruff config
-└── .venv/                  Python venv (git-ignored)
+|-- main.py               entry point: sets HEXAGON_FS_ROOT, starts Flask/Waitress
+|-- orchestrator.py        UART command module (pyserial) + the send lock
+|-- boot_log.py            rotating file logger (log.txt)
+|-- tap.py                 in-memory command history, feeds the simulator
+|-- server/
+|   |-- __init__.py        Flask app + route registration + serve()
+|   |-- store.py           consolidated state.json persistence
+|   |-- settings.py, schedule.py, scheduler.py, last_mode.py, macros.py
+|   |                      thin typed facades over store.py
+|   |-- modes/             mode registry, runner, and each mode's implementation
+|   |-- patterns/          pattern registry, layout.py, and each pattern's implementation
+|   +-- routes/            one module per API group, wired up in server/__init__.py
+|-- src/                   Preact/Vite frontend source
+|-- simhost/               dev harness that runs server/ off a real Pi (see SIMULATOR.md)
+|-- deploy/                systemd units, nginx config, Pi bootstrap scripts
++-- deploy.sh              the deploy/bootstrap CLI described above
 ```
-
----
-
-## API Reference
-
-All endpoints are on **port 80**, via nginx (see
-[Architecture](#architecture)) — the app itself binds to `127.0.0.1:8080`
-and is never reached directly.
-
-| Method   | Path                   | Description                               |
-| -------- | ---------------------- | ----------------------------------------- |
-| `GET`    | `/*`                   | Static files from `dist/`                 |
-| `GET`    | `/api/health`          | Liveness + UART status (JSON)             |
-| `POST`   | `/api/send`            | Send UART commands (`text/plain` body)    |
-| `GET`    | `/api/macros`          | List all macros                           |
-| `POST`   | `/api/macros`          | Create/update macro `{name, commands}`    |
-| `DELETE` | `/api/macros/<name>`   | Delete a macro by name                    |
-| `GET`    | `/api/patterns`        | List available patterns                   |
-| `POST`   | `/api/patterns/<name>` | Run a named pattern                       |
-| `POST`   | `/api/patterns/stop`   | Emergency stop (FFX + FFC)                |
-| `GET`    | `/api/modes`           | List available modes                      |
-| `POST`   | `/api/modes/<name>`    | Start a continuously-running mode         |
-| `POST`   | `/api/modes/stop`      | Stop the running mode (+ FFX + FFC)       |
-| `GET`    | `/api/modes/status`    | Which mode (if any) is currently running  |
-| `GET`    | `/api/sim/tail`        | Recent command tap history (simulator)    |
-| `GET`    | `/api/layout`          | Unit ring/coordinate topology (simulator) |
-| `GET`    | `/api/settings`        | Default motor speed + allowed range       |
-| `POST`   | `/api/settings`        | Set default motor speed                   |
-| `GET`    | `/api/schedule`        | Daily on/off schedule + timezone + clock state |
-| `POST`   | `/api/schedule`        | Patch the daily schedule (partial)        |
-
----
-
-See `AGENTS.md` for the full protocol reference and architecture overview,
-and `SIMULATOR.md` for developing patterns locally without a Pi.

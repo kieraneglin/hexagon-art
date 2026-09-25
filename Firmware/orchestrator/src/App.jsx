@@ -13,7 +13,7 @@ import { sendCommands, runPattern, stopPatterns, runMode } from "./api.js"
 // Everything below is the "admin" namespace — the terminal/patterns/modes/
 // tools UI built for developing on the piece, as opposed to the calm root
 // page (SimplePage) and Touch, which are for whoever's standing in front
-// of it. See "Simple UI / Admin UI" in AGENTS.md.
+// of it. See the Frontend section in README.md.
 const TABS = [
   { path: "/admin", label: "Terminal" },
   { path: "/admin/tools", label: "Tools" },

@@ -4,7 +4,7 @@ hexagons-netcfg — runtime WiFi provisioning helper (Raspberry Pi)
 
 Installed by deploy/pi-bootstrap.sh to /usr/local/sbin/hexagons-netcfg
 (root:root, 0755). Backs server/routes/network.py's on-Pi "add a WiFi
-network" tool (Tools page's WiFi section) — see AGENTS.md.
+network" tool (Tools page's WiFi section) — see README.md.
 
 `scan` and `list` are read-only and run unprivileged, straight as `pi` —
 nmcli's own read operations need no privilege. `add`, `forget`, and

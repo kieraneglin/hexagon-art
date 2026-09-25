@@ -200,12 +200,11 @@ def rand_stream(seed: int):
     """Return a zero-argument callable yielding successive floats in [0, 1).
 
     A plain 32-bit LCG (Numerical Recipes constants) rather than the
-    stdlib/CircuitPython `random` module — those use different PRNGs, so
-    the same seed would produce different choreography in the browser
-    simulator (CPython) than on the real units (CircuitPython). This
-    implementation is identical integer arithmetic under both, so a seed
-    previewed in the simulator is the exact sequence that plays on the
-    wall.
+    stdlib `random` module, so the sequence for a given seed is pinned to
+    this exact integer arithmetic instead of whatever `random`'s own
+    implementation happens to do on a given Python version. A seed
+    previewed in the browser simulator is guaranteed to be the exact
+    sequence that plays on the wall.
     """
     state = [seed & 0xFFFFFFFF]
 

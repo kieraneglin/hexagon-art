@@ -315,7 +315,7 @@ MODE_META: list = [
 # whose `min` is derived from move_ms()/one_sided_bounce_ms() at import
 # time — which only ever runs at settings.REFERENCE_RPM (14.5), since
 # nothing has loaded the persisted default_rpm yet — and whose fixed
-# `default` (6000/5000/900/6000 above) was authored at that same speed.
+# `default` (5500/5000/900/5000 above) was authored at that same speed.
 # mode_meta() below recomputes both against whatever speed is actually
 # configured right now.
 _SPEED_DEPENDENT_PARAMS = {

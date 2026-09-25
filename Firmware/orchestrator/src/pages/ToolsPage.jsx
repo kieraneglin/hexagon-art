@@ -76,7 +76,7 @@ export function ToolsPage() {
   const intervalRef = useRef(1000)
 
   // Kill the sweep if the page unmounts mid-run — this loop is entirely
-  // browser-side (see AGENTS.md), so nothing else will stop it.
+  // browser-side, so nothing else will stop it.
   useEffect(() => {
     return () => clearTimeout(timerRef.current)
   }, [])

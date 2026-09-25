@@ -2,7 +2,7 @@
 # Hexagon Art Piece — Orchestrator entry point (Raspberry Pi / CPython)
 #
 # Networking (WiFi, static IP, mDNS) is the OS's job now — NetworkManager
-# and Avahi handle it, see AGENTS.md for the one-time Pi setup. nginx owns
+# and Avahi handle it, see PI_SETUP.md for the one-time Pi setup. nginx owns
 # port 80 and reverse-proxies /api/* here (see deploy/nginx.hexagons.conf)
 # — this process binds to localhost only and is never reached directly
 # from the network. This file's only job is to point flash-path writes at

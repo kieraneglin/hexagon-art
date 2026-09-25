@@ -253,7 +253,7 @@ sudo systemctl enable hexagons-netwatch.service
 echo "  ✓ hexagons-netwatch installed and enabled (timeout ${WIFI_TIMEOUT}s)"
 
 # Runtime "add a WiFi network" tool the app itself calls into (Tools page,
-# server/routes/network.py) — see AGENTS.md's "Network resilience". The
+# server/routes/network.py) — see README.md's networking section. The
 # helper's own scoped sudoers file (separate from hexagons-deploy.sudoers,
 # which is dev-machine-only) is what lets the unprivileged `pi` user the
 # app runs as create a NetworkManager profile and reboot.

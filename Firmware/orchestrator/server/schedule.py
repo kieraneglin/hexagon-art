@@ -11,8 +11,8 @@
 #
 #   - The Pi Zero W has no RTC. Its clock comes entirely from
 #     systemd-timesyncd over the network, which may never succeed at all on
-#     the hexagon-ap fallback (no internet — see AGENTS.md's "Network
-#     resilience"). clock_synced() is what lets server/scheduler.py refuse
+#     the hexagon-ap fallback (no internet — see PI_SETUP.md).
+#     clock_synced() is what lets server/scheduler.py refuse
 #     to enforce a schedule against a clock it can't trust — "fail on": an
 #     art piece that stays running when it should have slept is a far
 #     better failure than one that stays dark all day for an undiagnosable

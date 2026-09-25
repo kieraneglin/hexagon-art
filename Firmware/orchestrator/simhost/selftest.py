@@ -362,8 +362,8 @@ def check_schedule_replay():
     """Replay-validates the exact failure mode server/scheduler.py's
     _turn_on() guards against: a mode's param recorded while one motor
     speed was configured can fall outside another speed's queue-safety
-    floor (every VALIDATORS entry is speed-dependent — see AGENTS.md's
-    "Queue-safety guard"). Called from main() inside the existing
+    floor (every VALIDATORS entry is speed-dependent — see
+    resolve_params() in server/modes/__init__.py). Called from main() inside the existing
     MIN_RPM/DEFAULT_RPM/MAX_RPM sweep, the same place every other
     speed-dependent check already lives.
     """

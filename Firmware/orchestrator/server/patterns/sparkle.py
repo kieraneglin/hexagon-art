@@ -7,12 +7,11 @@ uncoordinated texture rather than a coherent wave.
 
 Randomness
 ----------
-Uses ``helpers.rand_stream`` — a small integer LCG, not the stdlib/
-CircuitPython ``random`` module. Those use different PRNGs, so the same
-seed would choreograph differently in the browser simulator (CPython)
-than on the real units (CircuitPython); the LCG here is identical integer
-arithmetic on both, so a seed previewed in the simulator plays back
-exactly on the wall. Draws happen in ``layout.ALL_UNITS`` order (three
+Uses ``helpers.rand_stream`` — a small integer LCG, not the stdlib
+``random`` module, so the sequence for a given seed is pinned to this
+exact integer arithmetic rather than to `random`'s own implementation. A
+seed previewed in the browser simulator plays back exactly on the wall.
+Draws happen in ``layout.ALL_UNITS`` order (three
 draws per unit: participate, lag, amplitude scale) so the sequence is
 stable regardless of what other parameters are set to.
 

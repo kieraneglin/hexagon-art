@@ -17,7 +17,7 @@ Then build the UI once (or run `npm run dev` separately) so dist/
 exists:
     npm run build
 
-Open http://127.0.0.1:8080/sim in a browser.
+Open http://127.0.0.1:8080/admin/sim in a browser.
 """
 
 import argparse
@@ -75,7 +75,7 @@ def main():
 
     print(f"simhost: serving the real orchestrator server on http://{args.host}:{args.port}")
     print(f"simhost: flash filesystem sandboxed under {FS_ROOT}")
-    print(f"simhost: open http://{args.host}:{args.port}/sim")
+    print(f"simhost: open http://{args.host}:{args.port}/admin/sim")
     server.serve(args.host, args.port)
 
 

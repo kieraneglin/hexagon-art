@@ -29,7 +29,8 @@ Unit IDs are integers (0x01-0xFE).  The broadcast address 0xFF is reserved.
 #
 # Each entry is a list of integer unit IDs in that ring.
 # Ring 0 is always the centre; subsequent rings radiate outward.
-# Within each ring, IDs are ordered clockwise starting from due east.
+# Within each ring, IDs are ordered clockwise starting from due north-east
+# (see RING_START and the module docstring above).
 # ---------------------------------------------------------------------------
 
 # fmt: off

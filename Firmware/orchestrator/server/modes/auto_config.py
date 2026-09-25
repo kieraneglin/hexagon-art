@@ -3,8 +3,8 @@ server/modes/auto_config.py — auto mode's rotation, tuned by hand.
 
 server/modes/auto.py reads this file at import time. It changes rarely
 enough (tuning how the installation behaves unattended) that living in code
-rather than a runtime-editable JSON file is the right trade — see AGENTS.md's
-Modes section for why auto exists at all.
+rather than a runtime-editable JSON file is the right trade — see README.md's
+modes-vs-patterns section for why auto exists at all.
 
 SEGMENTS is played in order, forever (see SHUFFLE below to randomise the
 order instead). Each entry:

@@ -22,9 +22,9 @@ from server import store
 REFERENCE_RPM = 14.5
 DEFAULT_RPM = 14.5
 
-# ../hexagons/AGENTS.md lists 14.5f under "Do Not Change" — it's the
+# ../hexagons/README.md lists 14.5f under "Do Not Change" — it's the
 # resonance-minimising value for the 28BYJ-48 at this gear ratio, and
-# because the ULN2003 drive is constant-voltage, slowing the motor burns
+# because the TPL7407L drive is constant-voltage, slowing the motor burns
 # *more* energy per move, not less (heat is proportional to time energised,
 # and a slower move takes longer to cover the same angle). This range
 # still lets the installation be tuned slower or faster without reaching

@@ -12,8 +12,7 @@
 # multi-byte memories instead, so those go through a read-modify-write of
 # the FULL memory rather than trusting an immediate-mode partial write to
 # leave neighboring bytes alone — see write_mem_byte()'s comment for why.
-# See AGENTS.md and the plan note "Does any of this erase the chip?" for
-# the full reasoning.
+# See README.md's "How to Deploy" section for the full reasoning.
 
 if [ -n "${HEX_TOOLS_LIB_SOURCED:-}" ]; then
   return 0 2>/dev/null || exit 0

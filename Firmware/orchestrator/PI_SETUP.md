@@ -152,6 +152,15 @@ Garbage or nothing back → the `disable-bt` overlay didn't take (still on
 `ttyS0`, or no reboot yet). Boot/login text appearing → the console is
 still enabled on the serial port.
 
+**If GPIO14/15 is damaged or otherwise unusable**, the app doesn't have to
+use `/dev/serial0` at all — `HEXAGON_UART` (set in `deploy/hexagons.service`)
+picks the device, and a USB-to-serial adapter (`/dev/ttyUSB0`, e.g. an FTDI
+FT232R) works as a drop-in substitute. This installation's current Pi runs
+that way; see the comment at the top of `deploy/hexagons.service` for why.
+Everything else in this section (disabling Bluetooth, freeing the serial
+console) is still worth doing if GPIO14/15 works at all, since it's the
+lower-latency, no-extra-hardware option.
+
 ---
 
 ## 2a. Fan control (GPIO23)
@@ -311,7 +320,7 @@ disown; echo LAUNCHED
 **Recovering from AP mode without SSH:** join `hexagon-ap`, open
 `http://10.42.0.1`, and use the Tools page's WiFi section — it's built for
 exactly this. It POSTs to `GET`/`POST`/`DELETE /api/network`
-(`server/routes/network.py`, see `AGENTS.md`), which shells out to
+(`server/routes/network.py`), which shells out to
 `hexagons-netcfg` (`/usr/local/sbin/hexagons-netcfg`, installed by this
 script from `deploy/hexagons-netcfg.py`). That helper is what actually
 runs `nmcli` as root: `scan`/`list` are unprivileged reads; `add`,
@@ -433,7 +442,9 @@ worth adding unit ordering for.
 
 ```bash
 curl http://hexagons.local/api/health
-# {"ok":true,"uart":"/dev/serial0","uart_error":null,"uart_ok":true,"clock_synced":true}
+# {"ok":true,"uart":"<whatever HEXAGON_UART resolved to>","uart_error":null,"uart_ok":true,"clock_synced":true}
+# "/dev/serial0" on a Pi with working GPIO14/15; this installation's Pi
+# currently reports "/dev/ttyUSB0" — see the note in §2.
 
 curl --max-time 3 http://hexagons.local:8080/api/health   # from the DEV machine, not the Pi
 # must FAIL to connect — Flask binds 127.0.0.1:8080 only, nginx (port 80)
@@ -478,6 +489,6 @@ live in `/opt/hexagons/state.json`, excluded from `rsync --delete` by
 | `/etc/sudoers.d/hexagons-deploy` | Passwordless sudo for routine deploy commands only |
 | `/boot/firmware/config.txt` | `enable_uart=1`, `dtoverlay=disable-bt`, `dtoverlay=dwc2`, `dtoverlay=gpio-fan,gpiopin=23,temp=50000` |
 | `/boot/firmware/cmdline.txt` | No `console=serial0,...`; has `modules-load=dwc2,g_ether` |
-| `/dev/serial0` → `/dev/ttyAMA0` | The hexagon bus, 115200 baud |
+| `/dev/serial0` → `/dev/ttyAMA0` | The hexagon bus, 115200 baud, once GPIO14/15 works and `HEXAGON_UART` is left at its default. This installation currently overrides it to `/dev/ttyUSB0` (see §2). |
 | NetworkManager profiles | `hexagon-wifi-<ssid>` (per network), `hexagon-ap` (open, autoconnect off), `hexagon-usb` (10.42.0.1 over USB gadget) |
 | `boot_credentials.json` (repo root, gitignored) | WiFi/AP/SSH credentials — consumed once by `./deploy.sh --bootstrap`, never uploaded anywhere else |

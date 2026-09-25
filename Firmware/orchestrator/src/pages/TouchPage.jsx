@@ -25,9 +25,9 @@ const FLASH_MS = 600
 const IDLE_FRAC = 0
 
 // Rest angle every unit is reset to when the enable overlay is dismissed —
-// flush with the wall (see AGENTS.md's depth formula: 15*(1-cos(angle)),
-// 0 = lowest point of stroke), so a freshly-enabled piece reads as fully
-// settled rather than sitting at some arbitrary mid-stroke position.
+// flush with the wall (depth formula: 15*(1-cos(angle)), 0 = lowest point
+// of stroke), so a freshly-enabled piece reads as fully settled rather
+// than sitting at some arbitrary mid-stroke position.
 const BASELINE_ANGLE = 0
 
 export function TouchPage() {

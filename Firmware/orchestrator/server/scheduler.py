@@ -130,7 +130,7 @@ def _turn_on() -> None:
     "auto" if nothing was ever recorded or if replay fails validation —
     e.g. a param recorded at one configured motor speed can fall outside
     another speed's queue-safety floor (every mode's validate() is
-    speed-dependent, see AGENTS.md's "Queue-safety guard"). A stale
+    speed-dependent — see resolve_params() in server/modes/__init__.py). A stale
     recorded param must not be able to leave the piece silently off for
     the rest of the day; falling back to auto is always safe since its
     own validate() takes no speed-dependent params.
@@ -154,8 +154,8 @@ def _turn_on() -> None:
 def _turn_off(stop_event: threading.Event) -> None:
     """Home every unit, send it to 0° (a no-op after H, which already
     parks there — kept as explicit belt-and-braces), clear the queue, then
-    power down. Mirrors AGENTS.md's "Choreography Model" homing pairing
-    (H is staged; needs its own go_all()) and server/modes/auto.py's
+    power down. Mirrors the H/G staging pairing (H is staged; needs its
+    own go_all()) used throughout server/patterns/helpers.py, and server/modes/auto.py's
     _play() homing phase.
 
     Terminal command is the immediate FFP, not the firmware's new staged
@@ -163,9 +163,10 @@ def _turn_off(stop_event: threading.Event) -> None:
     under the firmware's position safeguard all night — a single flaky
     endstop read persisting past POS_CHECK_CONFIRM_MS would trigger a
     blocking re-home in the middle of the night (../hexagons/runner.cpp).
-    P sets needsHome, which ../hexagons/AGENTS.md calls "an explicit 'stay
-    put' the safeguard doesn't override" — the cost is a re-home next
-    morning, which _turn_on()'s first move already pays for regardless.
+    P sets needsHome — unlike D, it's an explicit "stay put" that the
+    firmware's position safeguard doesn't override (see
+    ../hexagons/README.md) — the cost is a re-home next morning, which
+    _turn_on()'s first move already pays for regardless.
 
     The wait before FFC/FFP is wrapped in try/finally, not gated on
     stop_event.wait()'s return value the way every mode's tick loop treats

@@ -53,9 +53,14 @@
 // HARDWARE CONNECTIONS (calibration jig)
 // --------------------------------------
 //
-//   Arduino Uno GND  ────→  ATtiny1616 GND  (pin 10 on SOIC-20)
-//   Arduino Uno Pin 9 ────→  ATtiny1616 PA6  (pin 4 on SOIC-20)
-//   Arduino Uno 5V   ────→  ATtiny1616 VDD  (pin 1 on SOIC-20) [optional]
+//   Arduino Uno GND  ────→  ATtiny1616 GND
+//   Arduino Uno Pin 9 ────→  ATtiny1616 PA6
+//   Arduino Uno 5V   ────→  ATtiny1616 VDD  [optional]
+//
+//   On a populated hexagon board (VQFN-20), PA6 and GND/VDD are already
+//   broken out on the J6 programming header — see ../programmer/README.md
+//   for that pinout and for running the 500 Hz reference from the
+//   programmer jig itself instead of a separate Uno.
 //
 //   The ATtiny1616 can be powered from the Uno's 5V rail or from a separate
 //   supply. If using separate supplies, ensure they share a common ground and
@@ -95,8 +100,9 @@
 //   Byte 0: Calibrated OSCCAL value (0x00–0x3F) or 0xFF if never calibrated
 //   Bytes 1–31: Reserved for future use
 //
-// The production firmware's clockcal module should be updated to read from
-// USERROW byte 0 instead of EEPROM 0x01. See clockcal.cpp.
+// The production firmware's clockcal module (../hexagons/clockcal.cpp)
+// reads this value from USERROW byte 0 at boot, with EEPROM address 0x01
+// kept in sync as a backup for units that lose their USERROW copy.
 //
 // REFERENCE
 // ---------
@@ -117,9 +123,10 @@
 // ---------------------------------------------------------------------------
 
 // 500 Hz reference input from Arduino Uno pin 9.
-// PA6 (physical pin 4 on SOIC-20) is unused on the hexagon PCB:
-// stepper uses PC0–3, endstop uses PB0, status LED uses PB1,
-// UART uses PB2/PB3, UPDI uses PA0.
+// PA6 is unused by the hexagon firmware itself: stepper uses PC0-3,
+// endstop uses PB0, status LED uses PB1, UART uses PB2/PB3, UPDI uses
+// PA0. PA6 is broken out on the J6 programming header specifically so
+// it's reachable for this calibration step.
 #define TUNING_PIN PIN_PA6
 
 // Status LED — same pin the hexagon firmware uses (PB1).

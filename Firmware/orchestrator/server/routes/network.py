@@ -2,8 +2,8 @@
 server/routes/network.py — on-Pi WiFi provisioning (Tools page)
 
 Wraps deploy/hexagons-netcfg.py (deployed to
-/usr/local/sbin/hexagons-netcfg — see AGENTS.md's "Network resilience" and
-PI_SETUP.md §6) rather than shelling out to nmcli directly: creating a
+/usr/local/sbin/hexagons-netcfg — see PI_SETUP.md) rather than shelling
+out to nmcli directly: creating a
 NetworkManager profile needs root, and the app runs as an unprivileged
 `pi` (deploy/hexagons.service). `scan`/`list` are read-only and need no
 privilege, so those call the helper directly; `add`/`forget`/`reboot` go
@@ -85,8 +85,8 @@ def post_network():
     Body: {"ssid": "...", "password": "...", "priority": 100}. `password`
     may be omitted/empty for an open network. Rebooting is deliberate, not
     incidental — hexagons-netwatch only re-runs its wait-then-decide
-    WiFi/AP logic at boot (see AGENTS.md's "Network resilience"), so a
-    newly-added profile can't actually be tried until the next one.
+    WiFi/AP logic at boot (see PI_SETUP.md), so a newly-added profile
+    can't actually be tried until the next one.
 
     Response: {"ok": true, "rebooting": true} or {"error": "..."}, 400.
     """

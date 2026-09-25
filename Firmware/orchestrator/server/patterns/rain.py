@@ -8,10 +8,10 @@ space, and a unit hit by more than one drop bobs more than once.
 
 Randomness
 ----------
-Uses ``helpers.rand_stream`` — a seeded LCG, not the stdlib/CircuitPython
-``random`` module, so a seed previewed in the browser simulator (CPython)
-produces the exact same drops on the real units (CircuitPython). See
-helpers.rand_stream's docstring for why.
+Uses ``helpers.rand_stream`` — a seeded LCG, not the stdlib ``random``
+module, so a seed previewed in the browser simulator produces the exact
+same drops when it actually runs. See helpers.rand_stream's docstring for
+why.
 
 Scheduling
 ----------
