@@ -1,0 +1,38 @@
+# --- Arduino Build Artifacts ---
+*.obj
+*.o
+*.a
+*.exe
+*.hex
+*.elf
+*.bin
+
+# --- Arduino IDE 2.x Local Files ---
+.build/
+build/
+/local.properties
+
+# --- VS Code & Arduino Extension ---
+.vscode/ipch/
+.vscode/msvc.json
+.vscode/.cm/
+# Un-comment the line below if you want to keep your specific tasks/settings but ignore local states
+# .vscode/
+
+# --- PlatformIO (If used instead of Arduino IDE) ---
+.pio/
+.pioenvs/
+.piolibdeps/
+.clang_complete
+.gcc-flags.json
+
+# --- Visual Micro (Visual Studio Plugin) ---
+_vm/
+*.vsarduino.h
+
+# --- OS Specific Files ---
+.DS_Store
+Thumbs.db
+
+# --- tools/ per-unit backups & session logs (see tools/update-unit.sh) ---
+hexagons/tools/backups/

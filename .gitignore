@@ -1,0 +1,61 @@
+# General
+.DS_Store
+Thumbs.db
+
+# KiCAD
+*.000
+*.bak
+*.bck
+*.kicad_pcb-bak
+*.kicad_sch-bak
+*-backups
+*-cache*
+*-bak
+*-bak*
+*~
+~*
+_autosave-*
+\#auto_saved_files\#
+*.tmp
+*-save.pro
+*-save.kicad_pcb
+fp-info-cache
+~*.lck
+\#auto_saved_files#
+*.net
+*.dsn
+*.ses
+*.xml
+*.csv
+.history
+*.kicad_prl
+
+# Project Files
+Notes/
+Research/
+Session Notes/
+
+# Misc
+.claude/
+AGENTS.md
+CLAUDE.md
+parse_kicad_sch.py
+
+# Arduino
+*.obj
+*.o
+*.a
+*.exe
+*.hex
+*.elf
+*.bin
+.build/
+build/
+/local.properties
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pycache/

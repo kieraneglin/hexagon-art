@@ -1,0 +1,13 @@
+# Hexagon Orchestrator — Python dependencies
+#
+# On the Pi, prefer apt (PEP 668 blocks unmanaged system-wide pip
+# installs): `sudo apt install python3-serial python3-flask
+# python3-waitress`. This file is for local dev venvs (.venv) where pip
+# works normally.
+pyserial>=3.5
+flask>=3.0
+waitress>=3.0
+# Pure-Python IANA tz database — zoneinfo.ZoneInfo (server/schedule.py) falls
+# back to this when the OS has no system tzdata (e.g. a minimal container).
+# Harmless, and unused, on macOS/the Pi, which both ship one.
+tzdata>=2024.1

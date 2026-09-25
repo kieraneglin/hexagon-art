@@ -1,0 +1,21 @@
+# Hexagon Orchestrator — periodic tzdata refresh (Raspberry Pi)
+#
+# Installed by deploy/pi-bootstrap.sh to
+# /etc/systemd/system/hexagons-tzdata.service, triggered by
+# hexagons-tzdata.timer rather than WantedBy=multi-user.target directly —
+# see that file for the boot + weekly schedule.
+#
+# Type=oneshot: runs to completion once per trigger. TimeoutStartSec bounds
+# how long a stalled apt-get (e.g. hexagon-ap has no internet at all) can
+# hold up the unit — hexagons-tzdata.sh's own apt options add a second,
+# tighter layer of the same protection.
+
+[Unit]
+Description=Hexagon Orchestrator tzdata refresh
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+TimeoutStartSec=120
+ExecStart=/usr/local/sbin/hexagons-tzdata

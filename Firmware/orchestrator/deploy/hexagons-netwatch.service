@@ -1,0 +1,28 @@
+# Hexagon Orchestrator — WiFi/AP fallback decision (Raspberry Pi)
+#
+# Installed by deploy/pi-bootstrap.sh to
+# /etc/systemd/system/hexagons-netwatch.service.
+#
+# Runs once at boot, after NetworkManager is up: waits for wlan0 to
+# associate to one of the known WiFi networks (hexagon-home /
+# hexagon-shed), and if neither shows up in time, brings up the
+# hexagon-ap access point instead. See deploy/hexagons-netwatch.sh for
+# the actual logic and PI_SETUP.md for the "AP until reboot" policy.
+#
+# Type=oneshot + RemainAfterExit so `systemctl is-enabled/is-active`
+# report sensibly even though the script exits after making its decision
+# once. Re-run the decision by hand at any time with:
+#   sudo systemctl restart hexagons-netwatch
+
+[Unit]
+Description=Hexagon Orchestrator WiFi/AP fallback
+After=NetworkManager.service
+Wants=NetworkManager.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/sbin/hexagons-netwatch
+
+[Install]
+WantedBy=multi-user.target

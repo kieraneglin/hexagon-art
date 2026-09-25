@@ -1,0 +1,17 @@
+#!/bin/sh
+# JS/JSX — lint-staged (eslint + prettier)
+npx lint-staged
+
+# Python — ruff format + check on staged .py files
+STAGED_PY=$(git diff --cached --name-only --diff-filter=ACM | grep '\.py$' || true)
+if [ -n "$STAGED_PY" ]; then
+  VENV_RUFF=".venv/bin/ruff"
+  if [ ! -x "$VENV_RUFF" ]; then
+    echo "⚠  Python venv not found. Run: python3 -m venv .venv && .venv/bin/pip install ruff"
+    exit 1
+  fi
+  echo "$STAGED_PY" | xargs "$VENV_RUFF" format
+  echo "$STAGED_PY" | xargs "$VENV_RUFF" check --fix
+  # Re-stage any files ruff modified
+  echo "$STAGED_PY" | xargs git add
+fi

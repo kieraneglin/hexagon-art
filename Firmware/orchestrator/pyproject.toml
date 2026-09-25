@@ -1,0 +1,21 @@
+[tool.ruff]
+# The Pi runs Raspberry Pi OS (trixie), which ships Python 3.13. Targeting
+# 3.11 (rather than 3.13) keeps this in sync with whatever's actually
+# deployed without needing to bump it if an older Pi OS image is ever used.
+target-version = "py311"
+line-length = 120
+
+# Only lint/format the firmware source files, not the venv
+include = ["*.py"]
+exclude = [".venv", "dist", "node_modules"]
+
+[tool.ruff.lint]
+# E/W = pycodestyle, F = pyflakes, I = isort, UP = pyupgrade
+select = ["E", "F", "I", "UP", "W"]
+
+[tool.ruff.lint.isort]
+known-third-party = ["serial", "flask", "waitress"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"

@@ -1,0 +1,15 @@
+# Scoped passwordless sudo for routine `./deploy.sh` operations only.
+#
+# Installed by deploy/pi-bootstrap.sh to /etc/sudoers.d/hexagons-deploy
+# (0440, validated with `visudo -c -f` before being moved into place).
+#
+# Deliberately NOT `NOPASSWD: ALL` — every command pi can run as root
+# without a password is listed explicitly here. `--install-nginx` (apt
+# installs, nginx config edits) and `--bootstrap` itself are one-time,
+# interactive (`ssh -t`, typed sudo password) and are NOT added to this
+# list — see deploy.sh's top-of-file Auth comment for why.
+#
+# Gotcha: sudoers command matching is literal on the argument list —
+# `systemctl status hexagons` here does NOT match `systemctl status
+# hexagons --no-pager`. Use the exact command form when testing `sudo -n`.
+pi ALL=(root) NOPASSWD: /usr/bin/systemctl restart hexagons, /usr/bin/systemctl status hexagons, /usr/bin/systemctl daemon-reload, /usr/bin/systemctl enable hexagons, /usr/bin/mv /tmp/hexagons.service /etc/systemd/system/hexagons.service

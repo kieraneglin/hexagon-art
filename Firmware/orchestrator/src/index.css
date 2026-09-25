@@ -1,0 +1,1682 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  /* Without this, a native form control (<input type="time">, <select> —
+     see .calm-field__control) renders using the OS's own light/dark
+     scheme rather than this page's palette: a phone in dark mode viewing
+     the light calm palette (below) would get a dark time-picker widget on
+     a cream page. Declared on both palettes' :root so each always matches
+     its own custom-property values instead of the OS default. */
+  color-scheme: dark;
+  --bg: #0d1117;
+  --surface: #161b22;
+  --border: #30363d;
+  --green: #3fb950;
+  --green-dim: #238636;
+  --red: #f85149;
+  --red-dim: #da3633;
+  --amber: #d29922;
+  --amber-dim: #9e6a03;
+  --blue: #58a6ff;
+  --blue-dim: #1f6feb;
+  --text-dim: #8b949e;
+  --text: #c9d1d9;
+  --prompt: #58a6ff;
+  --font: "SF Mono", "Fira Code", "Cascadia Code", "Courier New", monospace;
+  /* Auxiliary tokens for the handful of colors that used to be hardcoded
+     literals rather than custom properties — needed now that a second
+     palette (below) exists to flip to. */
+  --on-accent: #fff; /* text on a saturated green/red button */
+  --surface-raised: #1c2128; /* hover background one step up from --surface */
+  --scrim: rgba(0, 0, 0, 0.5); /* overlay backdrop behind a modal/drawer */
+}
+
+/* ── Calm UI palette ─────────────────────────────────────────────
+   Warm/light, used by the root ("simple") page and the Touch page —
+   see src/theme.js's useUiTheme(), which stamps data-ui="calm" onto
+   <html>. Same token *names* as the default palette above so every
+   shared rule (buttons, .pattern-card, .touch-*) reskins for free.
+   The admin UI (everything under /admin) never sets data-ui, so it
+   always gets the default block above regardless of this one. */
+:root[data-ui="calm"] {
+  color-scheme: light;
+  --bg: #f3efe6;
+  --surface: #fbf8f2;
+  --border: #ded5c6;
+  --green: #6f8f6a;
+  --green-dim: #9db59a;
+  --red: #b4614d;
+  --red-dim: #c98470;
+  --amber: #b4884d;
+  --amber-dim: #c9a97e;
+  --blue: #6f8f6a;
+  --blue-dim: #9db59a;
+  --text-dim: #857c6e;
+  --text: #3f3a32;
+  --prompt: #6f8f6a;
+  --font:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --on-accent: #fbf8f2;
+  --surface-raised: #efe9dc;
+  --scrim: rgba(63, 58, 50, 0.35);
+}
+
+html,
+body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 14px;
+  line-height: 1.5;
+  overflow: hidden;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+/* ── Tab bar ─────────────────────────────────────────────────── */
+.tab-bar {
+  display: flex;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.tab-bar__tab {
+  padding: 8px 20px;
+  cursor: pointer;
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 13px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  text-decoration: none;
+  user-select: none;
+  transition: color 0.15s;
+}
+.tab-bar__tab:hover {
+  color: var(--text);
+}
+.tab-bar__tab--active {
+  color: var(--green);
+  border-bottom-color: var(--green);
+}
+
+.tab-bar__actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+}
+.tab-bar__notice {
+  font-size: 11px;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+.tab-bar__btn {
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font: inherit;
+  font-size: 12px;
+  padding: 5px 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.tab-bar__btn:hover {
+  border-color: var(--text-dim);
+}
+.tab-bar__btn--stop {
+  color: var(--red);
+  border-color: var(--red-dim);
+}
+.tab-bar__btn--stop:hover {
+  border-color: var(--red);
+}
+.tab-bar__btn--danger {
+  color: var(--on-accent);
+  background: var(--red-dim);
+  border-color: var(--red-dim);
+}
+.tab-bar__btn--danger:hover {
+  background: var(--red);
+  border-color: var(--red);
+}
+.tab-bar__btn--auto {
+  color: var(--green);
+  border-color: var(--green-dim);
+}
+.tab-bar__btn--auto:hover {
+  border-color: var(--green);
+}
+
+.tab-bar__sim-link {
+  padding: 8px 16px;
+  cursor: pointer;
+  color: var(--blue);
+  font: inherit;
+  font-size: 13px;
+  background: none;
+  border: none;
+  border-left: 1px solid var(--border);
+  text-decoration: none;
+  user-select: none;
+  transition: color 0.15s;
+}
+.tab-bar__sim-link:hover {
+  color: var(--on-accent);
+}
+
+.tab-bar__back-link {
+  padding: 8px 16px;
+  cursor: pointer;
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 13px;
+  background: none;
+  border: none;
+  border-right: 1px solid var(--border);
+  text-decoration: none;
+  user-select: none;
+  transition: color 0.15s;
+}
+.tab-bar__back-link:hover {
+  color: var(--text);
+}
+
+/* ── Pages ───────────────────────────────────────────────────── */
+.page {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
+/* ── Log ─────────────────────────────────────────────────────── */
+.log {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 16px;
+  white-space: pre-wrap;
+  word-break: break-all;
+  -webkit-overflow-scrolling: touch;
+}
+.log__line--sent {
+  color: var(--green);
+}
+.log__line--info {
+  color: var(--text-dim);
+}
+.log__line--error {
+  color: var(--red);
+}
+.log__line--banner {
+  color: var(--prompt);
+}
+
+/* ── Macros drawer ───────────────────────────────────────────── */
+
+/* Desktop: fixed to the right edge of the viewport, always visible, no overlay */
+.drawer-backdrop {
+  display: none;
+}
+
+.macros-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 260px;
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 10;
+}
+
+.macros-drawer__close-btn {
+  display: none;
+}
+
+.input-line__macros {
+  display: none;
+}
+
+.macros-drawer__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.macros-drawer__title {
+  font-size: 13px;
+  font-weight: bold;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.macros-drawer__count {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 10px;
+}
+
+.macros-drawer__add-btn {
+  background: var(--green-dim);
+  color: var(--on-accent);
+  border: none;
+  padding: 4px 10px;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+.macros-drawer__add-btn:hover {
+  background: var(--green);
+}
+
+.macros-drawer__body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 0;
+}
+
+.macros-drawer__empty {
+  color: var(--text-dim);
+  font-size: 12px;
+  padding: 16px 14px;
+  text-align: center;
+}
+
+/* ── Macro groups ────────────────────────────────────────────── */
+.macro-group {
+  border-bottom: 1px solid var(--border);
+}
+.macro-group:last-child {
+  border-bottom: none;
+}
+
+.macro-group__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 14px;
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  text-align: left;
+  transition: color 0.15s;
+  user-select: none;
+}
+.macro-group__header:hover {
+  color: var(--text);
+}
+
+.macro-group__chevron {
+  font-size: 9px;
+  width: 10px;
+  flex-shrink: 0;
+}
+
+.macro-group__label {
+  flex: 1;
+}
+
+.macro-group__count {
+  font-size: 11px;
+  color: var(--text-dim);
+  opacity: 0.6;
+}
+
+.macro-group__list {
+  padding: 2px 0 6px;
+}
+
+/* ── Macro rows ──────────────────────────────────────────────── */
+.macro-row {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  padding: 0 10px;
+  margin: 2px 0;
+}
+
+.macro-row__run {
+  flex: 1;
+  background: var(--bg);
+  color: var(--green);
+  border: 1px solid var(--green-dim);
+  border-right: none;
+  padding: 5px 12px;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  border-radius: 4px 0 0 4px;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: background 0.15s;
+}
+.macro-row__run:hover {
+  background: var(--surface-raised);
+}
+.macro-row__run:active {
+  background: var(--bg);
+}
+
+.macro-row__delete {
+  background: var(--bg);
+  color: var(--red-dim);
+  border: 1px solid var(--green-dim);
+  border-left-color: var(--border);
+  padding: 5px 10px;
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  border-radius: 0 4px 4px 0;
+  line-height: 1;
+  transition:
+    color 0.15s,
+    background 0.15s;
+}
+.macro-row__delete:hover {
+  color: var(--red);
+  background: var(--surface-raised);
+}
+
+/* ── Macro editor (inside drawer) ────────────────────────────── */
+.macro-editor {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.macro-editor input,
+.macro-editor textarea {
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  font: inherit;
+  font-size: 13px;
+  padding: 6px 10px;
+  border-radius: 4px;
+  outline: none;
+  resize: none;
+}
+.macro-editor input:focus,
+.macro-editor textarea:focus {
+  border-color: var(--green-dim);
+}
+.macro-editor textarea {
+  min-height: 72px;
+}
+
+.macro-editor__row {
+  display: flex;
+  gap: 6px;
+}
+
+.macro-editor__btn {
+  background: var(--green-dim);
+  color: var(--on-accent);
+  border: none;
+  padding: 6px 14px;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+.macro-editor__btn:hover {
+  background: var(--green);
+}
+.macro-editor__btn--cancel {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+}
+.macro-editor__btn--cancel:hover {
+  border-color: var(--text-dim);
+  color: var(--text);
+}
+
+/* ── Input line ──────────────────────────────────────────────── */
+.input-line {
+  display: flex;
+  align-items: center;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  padding: 6px 12px;
+}
+
+.input-line__prompt {
+  color: var(--prompt);
+  margin-right: 8px;
+  user-select: none;
+  font-weight: bold;
+}
+
+.input-line__cmd {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--green);
+  font: inherit;
+  font-size: 14px;
+  outline: none;
+  padding: 6px 0;
+}
+.input-line__cmd::placeholder {
+  color: var(--text-dim);
+}
+
+/* .input-line__macros is hidden on desktop (set above); shown on mobile below */
+
+/* Groups Macros/Clear/Send so the mobile breakpoint below can wrap them
+   onto their own row as a single flex item — same "one item claims the
+   full row" trick .tab-bar__actions uses to force .tab-bar to wrap. */
+.input-line__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 8px;
+}
+
+.input-line__clear {
+  background: transparent;
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+  padding: 6px 14px;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  border-radius: 4px;
+  white-space: nowrap;
+  transition:
+    color 0.15s,
+    border-color 0.15s;
+}
+.input-line__clear:hover {
+  color: var(--red);
+  border-color: var(--red-dim);
+}
+.input-line__clear:active {
+  color: var(--red-dim);
+}
+
+.input-line__send {
+  background: var(--green-dim);
+  color: var(--on-accent);
+  border: none;
+  padding: 6px 14px;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+.input-line__send:active {
+  background: var(--green);
+}
+
+/* ── Status bar ──────────────────────────────────────────────── */
+.status-bar {
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  padding: 3px 12px;
+  font-size: 11px;
+  color: var(--text-dim);
+  display: flex;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+/* ── Tools page ──────────────────────────────────────────────── */
+.tools-page {
+  overflow-y: auto;
+  padding: 20px 16px;
+  gap: 24px;
+}
+
+.tools-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.tools-section__heading {
+  font-size: 12px;
+  font-weight: normal;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 8px;
+}
+
+/* Target row */
+.target-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.target-row label {
+  color: var(--text-dim);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.target-row__input {
+  width: 70px;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  font: inherit;
+  font-size: 14px;
+  padding: 6px 10px;
+  border-radius: 4px;
+  outline: none;
+  text-transform: uppercase;
+  text-align: center;
+}
+.target-row__input:focus {
+  border-color: var(--blue-dim);
+}
+.target-row__input--wide {
+  width: 90px;
+}
+/* Unlike .target-row__input (hex unit IDs — short, uppercased, centred),
+   an SSID or password reads left-to-right and can run long. */
+.target-row__input--text {
+  width: 160px;
+  text-transform: none;
+  text-align: left;
+}
+
+/* Section body copy, e.g. explaining what a tool does before its controls */
+.tools-section__hint {
+  color: var(--text-dim);
+  font-size: 12px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Section carrying an irreversible/high-consequence action (Set Unit ID) */
+.tools-section--danger {
+  border-color: var(--red-dim);
+}
+
+/* Tool buttons */
+.tool-btn-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.tool-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 12px 16px;
+  font: inherit;
+  cursor: pointer;
+  min-width: 160px;
+  flex: 1;
+  text-align: left;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+.tool-btn:hover {
+  background: var(--surface-raised);
+}
+.tool-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.tool-btn__title {
+  font-size: 13px;
+  font-weight: bold;
+  color: var(--text);
+}
+.tool-btn__desc {
+  font-size: 11px;
+  color: var(--text-dim);
+  line-height: 1.4;
+}
+
+.tool-btn--green {
+  border-color: var(--green-dim);
+}
+.tool-btn--green .tool-btn__title {
+  color: var(--green);
+}
+.tool-btn--green:hover {
+  border-color: var(--green);
+}
+
+.tool-btn--red {
+  border-color: var(--red-dim);
+}
+.tool-btn--red .tool-btn__title {
+  color: var(--red);
+}
+.tool-btn--red:hover {
+  border-color: var(--red);
+}
+
+.tool-btn--running {
+  animation: pulse-border 1.2s ease-in-out infinite;
+}
+@keyframes pulse-border {
+  0%,
+  100% {
+    border-color: var(--green-dim);
+  }
+  50% {
+    border-color: var(--green);
+  }
+}
+
+/* Unit ID Checker — big current-ID readout, sized to read from across the
+   room while standing at the wall, plus a compact progress counter. */
+.checker-readout {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+.checker-readout__id {
+  font-size: 42px;
+  font-weight: bold;
+  color: var(--green);
+  letter-spacing: 0.04em;
+}
+.checker-readout__progress {
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+/* Fixed-height log pane for the checker's sweep history — same bounded-flex
+   idiom as .sim-section--log so .log's flex:1/overflow-y:auto has something
+   to bound against. */
+.checker-log {
+  display: flex;
+  flex-direction: column;
+  height: 160px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.checker-log .log {
+  padding: 8px 12px;
+  font-size: 12px;
+}
+
+/* WiFi Network tool — saved hexagon-wifi-* profiles */
+.wifi-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.wifi-list__row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 6px 10px;
+}
+.wifi-list__name {
+  font-size: 13px;
+  flex: 1;
+  overflow-wrap: anywhere;
+}
+.wifi-list__active {
+  color: var(--green);
+}
+.wifi-list__meta {
+  font-size: 11px;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+.wifi-list__forget {
+  background: var(--bg);
+  color: var(--red);
+  border: 1px solid var(--red-dim);
+  border-radius: 4px;
+  font: inherit;
+  font-size: 11px;
+  padding: 4px 10px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.wifi-list__forget:hover {
+  border-color: var(--red);
+}
+
+/* ── Responsive ──────────────────────────────────────────────── */
+@media (max-width: 700px) {
+  /* The tab bar is a single non-wrapping flex row that was ~700px+ wide
+     unshrinkable (5 tabs + notice + 3 action buttons + Sim link, all
+     white-space: nowrap) inside #app's 1000px column — Power Down and the
+     Sim link were clipped off the right edge and unreachable, since
+     html/body{overflow:hidden} clips rather than scrolls, and the
+     viewport disables pinch-zoom (src/index.html). Let it wrap onto a
+     second row instead of trying to squeeze everything onto one. */
+  .tab-bar {
+    flex-wrap: wrap;
+  }
+  .tab-bar__tab {
+    padding: 8px 12px;
+  }
+  .tab-bar__actions {
+    margin-left: 0;
+    width: 100%;
+    justify-content: space-between;
+    padding: 6px 8px;
+    border-top: 1px solid var(--border);
+  }
+  .tab-bar__notice {
+    /* The flash message is the one piece of --actions content that can
+       appear/disappear mid-session; giving it its own row keeps it from
+       ever re-triggering this same overflow while an action is pending. */
+    order: -1;
+    flex-basis: 100%;
+    white-space: normal;
+  }
+  .tab-bar__btn {
+    min-height: 40px;
+  }
+  .tab-bar__sim-link {
+    border-left: none;
+    border-top: 1px solid var(--border);
+    width: 100%;
+    text-align: center;
+  }
+}
+
+/* Tablet + mobile: the macros drawer becomes an off-canvas toggle instead
+   of the always-visible sidebar above. The sidebar is `position: fixed`
+   docked to the *viewport's* own right edge, not #app's, so it only
+   avoids overlapping #app's content when the viewport is wide enough to
+   leave 260px clear beside #app's own (up to 1000px) column — well short
+   of that on a tablet, where it was covering part of the tab bar. 1366px
+   (not the more common 1024px tablet breakpoint) is deliberate — it's the
+   widest current iPad's landscape width (12.9"/13" Pro/Air, 1024x1366
+   logical points portrait/landscape); a narrower cutoff caught portrait
+   fine but missed landscape entirely, which is what this is tuned for. */
+@media (max-width: 1366px) {
+  .drawer-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: var(--scrim);
+    z-index: 100;
+  }
+
+  .macros-drawer {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 85vw;
+    max-width: 320px;
+    z-index: 101;
+    transform: translateX(100%);
+    transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+    border-left: 1px solid var(--border);
+  }
+  .macros-drawer--open {
+    transform: translateX(0);
+  }
+
+  /* Show close button and toggle button */
+  .macros-drawer__close-btn {
+    display: inline-flex;
+    background: transparent;
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+    padding: 4px 8px;
+    font: inherit;
+    font-size: 12px;
+    cursor: pointer;
+    border-radius: 4px;
+    line-height: 1;
+    align-items: center;
+    transition:
+      color 0.15s,
+      border-color 0.15s;
+  }
+  .macros-drawer__close-btn:hover {
+    color: var(--text);
+    border-color: var(--text-dim);
+  }
+
+  .input-line__macros {
+    display: inline-flex;
+    align-items: center;
+    background: transparent;
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+    padding: 6px 14px;
+    font: inherit;
+    font-size: 13px;
+    cursor: pointer;
+    border-radius: 4px;
+    white-space: nowrap;
+    transition:
+      color 0.15s,
+      border-color 0.15s;
+  }
+  .input-line__macros:hover {
+    color: var(--green);
+    border-color: var(--green-dim);
+  }
+  .input-line__macros--active {
+    color: var(--green);
+    border-color: var(--green-dim);
+  }
+}
+
+@media (max-width: 599px) {
+  .input-line__cmd {
+    font-size: 16px; /* prevent iOS zoom */
+  }
+
+  /* With Macros now shown too (see the 1024px query above), three
+     buttons alongside a live-typed command no longer reliably fit one
+     row on a phone — this is what was clipping Send off the right edge
+     (html/body{overflow:hidden} clips rather than scrolls, so it was
+     unreachable, not just visually tight). .input-line__actions claiming
+     the full row width is the same hard-wrap trick .tab-bar__actions
+     uses on .tab-bar: prompt + input keep line 1 (input still gets all
+     the leftover space), the button group drops to its own line below.
+     Not needed at tablet widths — plenty of room there for all three. */
+  .input-line {
+    flex-wrap: wrap;
+  }
+  .input-line__actions {
+    flex-basis: 100%;
+    margin-left: 0;
+    margin-top: 6px;
+    justify-content: flex-end;
+  }
+}
+
+/* ── Patterns page ───────────────────────────────────────────── */
+.status-text {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.status-text--error {
+  color: var(--red);
+}
+
+.pattern-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pattern-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 12px 14px;
+}
+
+/* Modes page (src/pages/ModesPage.jsx) reuses .pattern-card for its
+   continuously-running cards — this variant marks the one currently
+   running, same pulsing-border idiom as .tool-btn--running above. */
+.pattern-card--running {
+  animation: pulse-border 1.2s ease-in-out infinite;
+}
+
+.pattern-card__badge {
+  margin-left: 8px;
+  font-size: 10px;
+  font-weight: normal;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--green);
+}
+
+.pattern-card__body,
+.pattern-card__header {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.pattern-card__label {
+  font-size: 13px;
+  font-weight: bold;
+  color: var(--text);
+}
+
+.pattern-card__desc {
+  font-size: 11px;
+  color: var(--text-dim);
+  line-height: 1.4;
+}
+
+.pattern-card__run {
+  background: var(--green-dim);
+  color: var(--on-accent);
+  border: none;
+  padding: 6px 16px;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  border-radius: 4px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+.pattern-card__run:hover {
+  background: var(--green);
+}
+.pattern-card__run:active {
+  background: var(--green-dim);
+}
+.pattern-card__run--busy,
+.pattern-card__run:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.pattern-card__run--stop {
+  background: var(--red-dim);
+}
+.pattern-card__run--stop:hover {
+  background: var(--red);
+}
+.pattern-card__run--stop:active {
+  background: var(--red-dim);
+}
+
+.pattern-card__header {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.pattern-card__params {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  padding: 8px 0 4px;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.pattern-param {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.pattern-param__label {
+  font-size: 10px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.pattern-param__input {
+  width: 80px;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  font: inherit;
+  font-size: 13px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  outline: none;
+  text-align: right;
+}
+.pattern-param__input:focus {
+  border-color: var(--green-dim);
+}
+
+/* ── Sim page ────────────────────────────────────────────────── */
+/* position:fixed deliberately breaks out of #app's max-width:1000px —
+   the sim wants the full viewport, not the terminal's narrow column. */
+.sim-page {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.sim-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.sim-header__title {
+  font-size: 13px;
+  font-weight: bold;
+}
+.sim-header__notice {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.sim-header__notice--warn {
+  color: var(--amber);
+}
+.sim-header__badge--live {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--green);
+  letter-spacing: 0.05em;
+}
+.sim-header__live-btn {
+  margin-left: auto;
+  background: var(--green-dim);
+  color: var(--on-accent);
+  border: none;
+  padding: 4px 12px;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+.sim-header__live-btn:hover {
+  background: var(--green);
+}
+
+.sim-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.sim-canvas-wrap {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+  overflow: hidden;
+}
+.sim-canvas-wrap canvas {
+  display: block;
+  cursor: pointer;
+}
+
+.sim-sidebar {
+  width: 280px;
+  flex-shrink: 0;
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.sim-section {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.sim-section--log {
+  flex: 1;
+  min-height: 120px;
+  display: flex;
+  flex-direction: column;
+  border-bottom: none;
+}
+.sim-section--log .log {
+  padding: 8px 14px;
+  font-size: 11px;
+}
+
+.sim-section__heading {
+  font-size: 11px;
+  font-weight: normal;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+}
+
+.sim-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text);
+  cursor: pointer;
+  padding: 3px 0;
+  user-select: none;
+}
+
+.sim-legend {
+  margin-top: 10px;
+}
+.sim-legend__bar {
+  height: 10px;
+  border-radius: 3px;
+  border: 1px solid var(--border);
+}
+.sim-legend__labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--text-dim);
+  margin-top: 4px;
+}
+
+.sim-inspector {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 10px;
+  font-size: 12px;
+}
+.sim-inspector dt {
+  color: var(--text-dim);
+}
+.sim-inspector dd {
+  color: var(--text);
+  text-align: right;
+}
+.sim-inspector__warn {
+  color: var(--red) !important;
+}
+
+.sim-transport {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.sim-transport__play {
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  width: 32px;
+  height: 28px;
+  font-size: 13px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.sim-transport__play:hover {
+  border-color: var(--text-dim);
+}
+.sim-transport__play:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.sim-transport__rate {
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font: inherit;
+  font-size: 12px;
+  padding: 4px 6px;
+  flex-shrink: 0;
+}
+.sim-transport__rate:disabled {
+  opacity: 0.4;
+}
+.sim-transport__scrub {
+  flex: 1;
+  accent-color: var(--green);
+}
+.sim-transport__time {
+  font-size: 11px;
+  color: var(--text-dim);
+  min-width: 48px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+@media (max-width: 700px) {
+  .sim-body {
+    flex-direction: column;
+  }
+  .sim-sidebar {
+    width: auto;
+    border-left: none;
+    border-top: 1px solid var(--border);
+    max-height: 45vh;
+  }
+  .sim-section--log {
+    min-height: 160px;
+  }
+}
+
+/* ── Touch page ──────────────────────────────────────────────── */
+/* Unlike .sim-page, this stays inside #app's flex column (no
+   position:fixed) — the 1000px max-width column is the full viewport on a
+   phone, the primary target for this page, and an acceptable cap on
+   desktop. */
+.touch-page {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.touch-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.touch-header__back-link {
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 13px;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.touch-header__back-link:hover {
+  color: var(--text);
+}
+.touch-header__title {
+  font-size: 13px;
+  font-weight: bold;
+}
+.touch-header__notice {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.touch-canvas-wrap {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  overflow: hidden;
+  /* Swiping is the whole point of this page — without this the browser
+     intercepts single-finger drags as page scroll/pinch-zoom gestures
+     instead of delivering them as pointer events. */
+  touch-action: none;
+}
+.touch-canvas-wrap canvas {
+  display: block;
+  cursor: pointer;
+  width: 100%;
+  height: 100%;
+}
+
+.touch-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--scrim);
+  padding: 24px;
+}
+.touch-overlay__panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 320px;
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 20px;
+}
+.touch-overlay__title {
+  font-size: 15px;
+  font-weight: bold;
+  margin: 0;
+}
+.touch-overlay__desc {
+  font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.4;
+  margin: 0;
+}
+.touch-overlay__error {
+  font-size: 12px;
+  color: var(--red);
+  margin: 0;
+}
+.touch-overlay__button {
+  background: var(--green-dim);
+  color: var(--on-accent);
+  border: none;
+  padding: 8px 16px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: bold;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.15s;
+}
+.touch-overlay__button:hover {
+  background: var(--green);
+}
+.touch-overlay__button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.touch-legend {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.touch-legend__bar {
+  width: 80px;
+  height: 8px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+.touch-legend__label {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+/* ── Simple (calm) UI ────────────────────────────────────────── */
+/* The root page — src/pages/SimplePage.jsx. Renders directly as #app's
+   only child (no TabBar wrapper, unlike the /admin routes), so it owns
+   the full flex column itself the same way .touch-page does. */
+.calm-page {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.calm-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  flex-shrink: 0;
+}
+.calm-header__title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.calm-link {
+  color: var(--green);
+  font: inherit;
+  font-size: 14px;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.calm-link:hover {
+  color: var(--text);
+}
+.calm-link--muted {
+  color: var(--text-dim);
+  font-size: 13px;
+}
+.calm-link--muted:hover {
+  color: var(--text);
+}
+
+.calm-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  padding: 20px;
+}
+
+.calm-notice {
+  font-size: 13px;
+  color: var(--text-dim);
+  min-height: 1.2em;
+}
+
+.calm-grid {
+  display: grid;
+  /* 1fr, not minmax(140px, 200px) — a capped column width left the grid
+     narrower than its 440px box (416px of content, left-aligned), so it
+     didn't line up with .calm-actions below, whose flex:1 buttons fill
+     the full width. 1fr matches that exactly. */
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  width: 100%;
+  max-width: 440px;
+}
+
+.calm-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 96px;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  font: inherit;
+  cursor: pointer;
+  padding: 16px;
+  transition:
+    border-color 0.15s,
+    background 0.15s,
+    transform 0.1s;
+}
+.calm-btn:hover {
+  border-color: var(--green);
+}
+.calm-btn:active {
+  transform: scale(0.98);
+}
+.calm-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.calm-btn__label {
+  font-size: 17px;
+  font-weight: 600;
+}
+.calm-btn__blurb {
+  font-size: 12px;
+  color: var(--text-dim);
+  text-align: center;
+  line-height: 1.35;
+}
+
+.calm-actions {
+  display: flex;
+  gap: 16px;
+  width: 100%;
+  max-width: 440px;
+}
+.calm-actions .calm-btn {
+  flex: 1;
+  min-height: 56px;
+}
+.calm-btn--home {
+  color: var(--green);
+  border-color: var(--green-dim);
+}
+.calm-btn--stop {
+  color: var(--on-accent);
+  background: var(--red-dim);
+  border-color: var(--red-dim);
+}
+.calm-btn--stop:hover {
+  background: var(--red);
+  border-color: var(--red);
+}
+
+.calm-footer {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  padding: 16px 20px 24px;
+  flex-shrink: 0;
+}
+
+/* .calm-body--top: SettingsPage's content is a scrolling stack of form
+   sections rather than SimplePage's single centred grid, so it starts at
+   the top instead of vertically centring — .calm-body's own centring
+   would otherwise leave a short form awkwardly floating mid-viewport. */
+.calm-body--top {
+  justify-content: flex-start;
+}
+
+.calm-warning {
+  width: 100%;
+  max-width: 440px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text);
+  background: var(--amber-dim);
+  border: 1px solid var(--amber);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+
+.calm-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 440px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px 20px;
+}
+
+.calm-section__heading {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.calm-section__hint {
+  font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.4;
+  margin-top: -6px;
+}
+
+.calm-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.calm-field--row {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.calm-field__label {
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.calm-field__control {
+  font: inherit;
+  font-size: 14px;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+.calm-field__control:disabled {
+  opacity: 0.5;
+}
+
+.calm-toggle {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--green);
+}
+
+.calm-btn--save {
+  align-self: flex-start;
+  min-height: unset;
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+@media (max-width: 480px) {
+  .calm-grid {
+    max-width: 320px;
+  }
+}

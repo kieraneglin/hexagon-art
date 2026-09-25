@@ -1,0 +1,21 @@
+# Hexagon Orchestrator — schedule for hexagons-tzdata.service
+#
+# This Pi is a permanently-on art installation that may not reboot for
+# months — a boot-only refresh (the pattern hexagons-netwatch.service
+# uses) would leave it running on stale tzdata for that entire uptime.
+# OnBootSec covers a fresh boot; OnUnitActiveSec re-runs it weekly
+# regardless of uptime. Persistent=true catches up on a missed weekly run
+# if the Pi itself happened to be powered off across it (the app-level
+# daily on/off schedule in server/schedule.py only stops the motors, not
+# the Pi — this timer's own boot/weekly cadence is unaffected by it).
+
+[Unit]
+Description=Periodic tzdata refresh for Hexagon Orchestrator
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=1w
+Persistent=true
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,38 @@
+# Hexagon Orchestrator — systemd unit (Raspberry Pi)
+#
+# Installed by `./deploy.sh --install-service` to
+# /etc/systemd/system/hexagons.service.
+#
+# HEXAGON_FS_ROOT is deliberately NOT set here — main.py derives it from
+# its own location (the install directory), so this file doesn't need
+# editing if REMOTE_DIR ever changes.
+#
+# main.py binds to 127.0.0.1 by default — this process is never reachable
+# directly from the network. nginx (deploy/nginx.hexagons.conf, installed
+# separately via `./deploy.sh --install-nginx`) is the public entry point
+# on port 80 and reverse-proxies /api/* here.
+#
+# HEXAGON_UART is temporarily /dev/ttyUSB0, not /dev/serial0 — this Pi's
+# onboard GPIO14/15 (PL011 UART0) were electrically destroyed (see git log
+# around 2026-08-23); a USB-TTL adapter (FTDI FT232R, via a genuine USB-OTG
+# cable so the port stays in host mode) stands in until the board is
+# replaced or a proper level-shifted interface is built. Revert to
+# /dev/serial0 once GPIO14/15 are working again on a Pi.
+
+[Unit]
+Description=Hexagon Orchestrator
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/opt/hexagons
+Environment=HEXAGON_UART=/dev/ttyUSB0
+Environment=HEXAGON_PORT=8080
+ExecStart=/usr/bin/python3 /opt/hexagons/main.py
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target

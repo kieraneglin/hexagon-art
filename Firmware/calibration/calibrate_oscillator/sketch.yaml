@@ -1,0 +1,8 @@
+profiles:
+  ATtiny1616:
+    fqbn: megaTinyCore:megaavr:atxy6:chip=1616,clock=20internal,millis=disabled
+    platforms:
+      - platform: megaTinyCore:megaavr
+    programmer: jtag2updi
+    port: /dev/cu.usbserial-210
+default_profile: ATtiny1616

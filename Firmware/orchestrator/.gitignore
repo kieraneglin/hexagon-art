@@ -1,0 +1,80 @@
+# Arduino Build Artifacts
+*.obj
+*.o
+*.a
+*.exe
+*.hex
+*.elf
+*.bin
+
+# Arduino IDE 2.x Local Files
+.build/
+build/
+/local.properties
+
+# VS Code & Arduino Extension
+.vscode/ipch/
+.vscode/msvc.json
+.vscode/.cm/
+# Un-comment the line below if you want to keep your specific tasks/settings but ignore local states
+# .vscode/
+
+# PlatformIO (If used instead of Arduino IDE)
+.pio/
+.pioenvs/
+.piolibdeps/
+.clang_complete
+.gcc-flags.json
+
+# Visual Micro (Visual Studio Plugin)
+_vm/
+*.vsarduino.h
+
+# OS Specific Files
+.DS_Store
+Thumbs.db
+
+# Vite / Node
+node_modules/
+dist/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Miscellaneous
+*.log
+
+# HEXAGON_FS_ROOT defaults to the repo root when main.py is run directly
+# (see main.py) — these are runtime state, not source. macros.json is the
+# pre-consolidation macros file (server/store.py now owns state.json, which
+# folds macros in) — kept ignored since it's still read as a migration
+# fallback and may still exist on a Pi that hasn't redeployed yet.
+state.json
+state.json.tmp
+macros.json
+log.txt
+errors.txt
+
+# Vestigial from the ESP32/CircuitPython target — WiFi is now configured at
+# the OS level (NetworkManager/raspi-config), not read by any code in this
+# repo. Kept ignored in case it still exists on disk from that setup.
+wifi_networks.json
+
+# WiFi/AP/SSH credentials consumed by `./deploy.sh --bootstrap` (see
+# deploy/pi-bootstrap.sh) — never committed. See PI_SETUP.md for the format.
+boot_credentials.json
+
+# simhost — local dev harness sandbox filesystem (macros.json, log.txt, dist/ symlink)
+simhost/.fsroot/
+
+# AI Tooling
+.claude/settings.local.json
+.claude/MEMORY.md
+.claude/memory/*
+!.claude/memory/.keep
+.claude/plans/*
+!.claude/plans/.keep
+CLAUDE.local.md
+/.claude/CLAUDE.md

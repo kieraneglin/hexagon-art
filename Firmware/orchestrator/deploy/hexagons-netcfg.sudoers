@@ -1,0 +1,20 @@
+# Scoped passwordless sudo for the on-Pi WiFi provisioning tool
+# (server/routes/network.py, Tools page's WiFi section).
+#
+# Installed by deploy/pi-bootstrap.sh to /etc/sudoers.d/hexagons-netcfg
+# (0440, validated with `visudo -c -f` before being moved into place).
+#
+# Deliberately its own file, separate from hexagons-deploy.sudoers — that
+# one's header scopes itself to "routine ./deploy.sh operations only" from
+# the dev machine; this is app-runtime privilege the Flask app reaches for
+# itself while serving a request.
+#
+# Only these three exact invocations of the helper script are permitted —
+# no wildcards. All user input (SSID, password, priority) travels to the
+# helper as JSON on stdin instead of argv, both to keep the password out
+# of `ps` and because sudoers matches literally on the argument list, so a
+# wildcarded `nmcli ... *` rule (reachable dispatcher scripts,
+# connection.permissions, etc.) was the alternative this avoids. `scan`
+# and `list` need no privilege and are never run through sudo — see
+# deploy/hexagons-netcfg.py.
+pi ALL=(root) NOPASSWD: /usr/local/sbin/hexagons-netcfg add, /usr/local/sbin/hexagons-netcfg forget, /usr/local/sbin/hexagons-netcfg reboot

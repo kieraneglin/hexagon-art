@@ -1,0 +1,33 @@
+---
+BasedOnStyle: Google
+ColumnLimit: 120
+
+# Always use braces, even for single-statement if/else/for/while bodies.
+InsertBraces: true
+
+# Braces on the same line (K&R style, consistent with Google base).
+BreakBeforeBraces: Attach
+
+# Indent with 2 spaces (Google default).
+IndentWidth: 2
+
+# Keep short functions/lambdas on one line.
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortLambdasOnASingleLine: Inline
+
+# Never squash if/else/loops onto a single line.
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+AllowShortBlocksOnASingleLine: Empty
+
+# Pointer/reference alignment.
+PointerAlignment: Left
+
+# Blank lines between top-level definitions (functions, classes, etc.).
+SeparateDefinitionBlocks: Always
+
+# Preserve up to 1 blank line between statements; don't collapse manual spacing.
+MaxEmptyLinesToKeep: 1
+
+# Include sorting.
+SortIncludes: CaseSensitive
