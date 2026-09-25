@@ -22,7 +22,7 @@ A local art exhibit asked a communal woodshop that I am part of to create some i
 
 - [`Firmware/`](Firmware/README.md): the per-unit firmware, the UPDI programmer/calibration jig, and the orchestrator software.
 - [`Schematic/`](Schematic/README.md): KiCad projects for the hexagon board and the distributor board.
-- `CAD/`: the enclosure and mechanism design (Fusion 360 source and a STEP export).
+- [`CAD/`](CAD/README.md): the enclosure, mechanism design, and fastener BOM
 
 Each directory's own README has the actual detail; this file is just the map.
 
